@@ -1,0 +1,27 @@
+<button
+  type="button"
+  class="flip-card"
+  [class.is-flipped]="flipped()"
+  [attr.aria-pressed]="flipped()"
+  (click)="flipped.set(!flipped())"
+>
+  <span class="visually-hidden"
+    >Card {{ index() + 1 }} of {{ total() }}, showing {{ flipped() ? 'back' : 'front' }}:
+  </span>
+  <span class="flip-card-inner">
+    <span
+      class="face card shadow-sm"
+      [attr.aria-hidden]="flipped() ? 'true' : null"
+      [attr.inert]="flipped() ? '' : null"
+    >
+      <span class="card-text face-text">{{ front() }}</span>
+    </span>
+    <span
+      class="face face-back card text-bg-primary shadow-sm"
+      [attr.aria-hidden]="flipped() ? null : 'true'"
+      [attr.inert]="flipped() ? null : ''"
+    >
+      <span class="card-text face-text">{{ back() }}</span>
+    </span>
+  </span>
+</button>

@@ -1,0 +1,61 @@
+@if (notice()) {
+  <div class="alert alert-warning" role="status">{{ notice() }}</div>
+}
+
+<h1 class="text-center mb-1">{{ current().topic }}</h1>
+<p class="text-center text-body-secondary mb-2" aria-live="polite">
+  Series {{ index() + 1 }} of {{ deck().length }}
+</p>
+
+@if (current().imageUrl) {
+  <div class="text-center mb-4">
+    <img
+      [src]="current().imageUrl"
+      [alt]="current().topic"
+      class="img-fluid rounded"
+      style="max-height: 200px"
+    />
+  </div>
+} @else {
+  <div class="mb-4"></div>
+}
+
+<div class="study-cards row row-cols-1 row-cols-md-{{ current().cards.length }} g-5 mx-auto">
+  @for (card of current().cards; track card.position; let i = $index) {
+    <div class="col">
+      <app-flip-card
+        [front]="card.front"
+        [back]="card.back"
+        [index]="i"
+        [total]="current().cards.length"
+        [flipped]="flipped()[i]"
+        (flippedChange)="setFlipped(i, $event)"
+      />
+    </div>
+  }
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+  <button
+    type="button"
+    class="btn btn-outline-primary"
+    [disabled]="!hasPrevious()"
+    (click)="previous()"
+  >
+    ← Previous
+  </button>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="flipAll()">Flip all</button>
+    <button type="button" class="btn btn-outline-secondary" (click)="reset()">Reset</button>
+    <button type="button" class="btn btn-outline-secondary" (click)="shuffle()">Shuffle</button>
+  </div>
+  <button type="button" class="btn btn-outline-primary" [disabled]="!hasNext()" (click)="next()">
+    Next →
+  </button>
+</div>
+
+<p class="text-center text-body-secondary small mt-3 mb-0">
+  Shortcuts: <kbd class="mx-1">1</kbd><kbd class="me-1">2</kbd><kbd class="me-2">3</kbd> flip a card
+  · <kbd class="mx-1">←</kbd><kbd class="me-2">→</kbd> previous / next ·
+  <kbd class="mx-1">F</kbd> flip all · <kbd class="mx-1">R</kbd> reset
+</p>

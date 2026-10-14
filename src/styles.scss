@@ -1,0 +1,88 @@
+// Bootstrap 5.3, trimmed to the parts this app uses (SPEC §5.1: shared styles live here).
+// Add a partial below when a new Bootstrap component is used.
+
+// Configuration
+@import 'bootstrap/scss/functions';
+$primary: #6baed6;
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+// Drop utility groups the app doesn't use. Remove a key from this list to bring it back.
+$utilities: map-merge(
+  $utilities,
+  (
+    'align': null,
+    'float': null,
+    'object-fit': null,
+    'opacity': null,
+    'overflow-x': null,
+    'overflow-y': null,
+    'focus-ring': null,
+    'position': null,
+    'top': null,
+    'bottom': null,
+    'start': null,
+    'end': null,
+    'translate-middle': null,
+    'border-opacity': null,
+    'viewport-width': null,
+    'min-viewport-width': null,
+    'viewport-height': null,
+    'min-viewport-height': null,
+    'align-content': null,
+    'order': null,
+    'font-style': null,
+    'text-transform': null,
+    'word-wrap': null,
+    'text-opacity': null,
+    'link-opacity': null,
+    'link-offset': null,
+    'link-underline': null,
+    'link-underline-opacity': null,
+    'bg-opacity': null,
+    'gradient': null,
+    'user-select': null,
+    'pointer-events': null,
+    'z-index': null,
+  )
+);
+
+// Layout & components
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/navbar';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/list-group';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/modal';
+@import 'bootstrap/scss/spinners';
+
+// Helpers & utilities
+@import 'bootstrap/scss/helpers';
+@import 'bootstrap/scss/utilities/api';
+
+// App-wide styles
+@include media-breakpoint-up(md) {
+  .study-cards {
+    max-width: 80%;
+  }
+}
+
+// Subtler placeholders: lighter on the light theme, darker on the dark theme.
+.form-control::placeholder {
+  color: #b5bcc4;
+}
+
+[data-bs-theme='dark'] .form-control::placeholder {
+  color: #5c636a;
+}

@@ -1,0 +1,123 @@
+<div class="col-12 col-lg-8 mx-auto">
+  <h1 class="mb-3">{{ isNew() ? 'New series' : 'Edit series' }}</h1>
+
+  @if (!isNew()) {
+    <!-- TODO (milestone 4): load the series with getSeries(id) and save with PUT (FR-EDT-3/4). -->
+    <div class="alert alert-secondary">Editing series {{ id() }} is not available yet.</div>
+  } @else {
+    @switch (saveState()) {
+      @case ('saved') {
+        <div class="alert alert-success" role="status">Saved.</div>
+      }
+      @case ('error') {
+        <div class="alert alert-danger" role="alert">
+          The series could not be saved. Please try again.
+        </div>
+      }
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="mb-4">
+        <label for="topic" class="form-label">Source topic</label>
+        <input
+          id="topic"
+          type="text"
+          class="form-control"
+          formControlName="topic"
+          placeholder="Enter Topic"
+          maxlength="200"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">
+          Image <span class="text-body-secondary small">(optional)</span>
+        </label>
+        @if (imagePreviewUrl()) {
+          <div class="mb-2 d-flex align-items-center gap-3">
+            <img
+              [src]="imagePreviewUrl()"
+              alt="Series image preview"
+              class="img-thumbnail"
+              style="max-height: 150px; max-width: 200px; object-fit: contain;"
+            />
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearImage()">
+              Remove
+            </button>
+          </div>
+        }
+        <input
+          #imageInput
+          type="file"
+          class="form-control"
+          accept="image/*"
+          (change)="onImageChange($event)"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label d-block">Number of cards</label>
+        <div class="btn-group" role="group" aria-label="Number of cards">
+          @for (n of cardCountOptions; track n) {
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              [class.active]="cardCount() === n"
+              [attr.aria-pressed]="cardCount() === n"
+              (click)="cardCount.set(n)"
+            >
+              {{ n }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div formArrayName="cards">
+        @for (card of form.controls.cards.controls; track $index; let i = $index) {
+          @if (i < cardCount()) {
+            <fieldset class="card mb-3" [formGroupName]="i">
+              <legend class="card-header fs-6 fw-semibold m-0">Card {{ i + 1 }}</legend>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label [for]="'front-' + i" class="form-label">Front</label>
+                  <textarea
+                    [id]="'front-' + i"
+                    class="form-control"
+                    rows="2"
+                    formControlName="front"
+                    placeholder="Enter Front"
+                    maxlength="500"
+                  ></textarea>
+                </div>
+                <div>
+                  <label [for]="'back-' + i" class="form-label">Back</label>
+                  <textarea
+                    [id]="'back-' + i"
+                    class="form-control"
+                    rows="3"
+                    formControlName="back"
+                    placeholder="Enter Back"
+                    maxlength="1000"
+                  ></textarea>
+                </div>
+              </div>
+            </fieldset>
+          }
+        }
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || saveState() === 'saving'"
+        >
+          @if (saveState() === 'saving') {
+            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+          }
+          Save
+        </button>
+      </div>
+    </form>
+  }
+</div>
