@@ -1,12 +1,20 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { CardSeries } from '../../core/cards/card.models';
+import { makeSeries, sampleDeck } from '../../testing/card-testing';
+import { authTestProviders, TEST_API } from '../../testing/auth-testing';
 import { Study } from './study';
+
+const URL = `${TEST_API}/card-series`;
 
 describe('Study', () => {
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
+        ...authTestProviders(),
         provideRouter([{ path: 'study', component: Study }], withComponentInputBinding()),
       ],
     });
@@ -14,9 +22,16 @@ describe('Study', () => {
 
   afterEach(() => vi.restoreAllMocks());
 
-  async function render(startUrl = '/study') {
+  const http = () => TestBed.inject(HttpTestingController);
+
+  /** Answers the page's load request; pass `null` to leave it pending. */
+  async function render(startUrl = '/study', deck: CardSeries[] | null = sampleDeck()) {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(startUrl, Study);
+    if (deck)
+      http()
+        .expectOne((r) => r.url === URL)
+        .flush(deck);
     await harness.fixture.whenStable();
     const el = harness.routeNativeElement!;
     const stable = () => harness.fixture.whenStable();
@@ -155,5 +170,90 @@ describe('Study', () => {
     expect(topic()).toBe('Dog');
     expect(el.querySelector('.alert-warning')?.textContent).toContain('not found');
     expect(url()).toBe('/study?series=dog-series');
+  });
+
+  describe('data loading', () => {
+    it('requests every series with its cards in one call', async () => {
+      const harness = await RouterTestingHarness.create();
+      await harness.navigateByUrl('/study', Study);
+      const req = http().expectOne((r) => r.url === URL);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('include')).toBe('cards');
+      req.flush(sampleDeck());
+    });
+
+    it('shows a loading indicator and no series until the response arrives', async () => {
+      const { el, stable } = await render('/study', null);
+      expect(el.querySelector('.spinner-border')).not.toBeNull();
+      expect(el.querySelector('h1')).toBeNull();
+      expect(el.querySelector('app-flip-card')).toBeNull();
+
+      http()
+        .expectOne((r) => r.url === URL)
+        .flush(sampleDeck());
+      await stable();
+      expect(el.querySelector('.spinner-border')).toBeNull();
+      expect(el.querySelector('h1')?.textContent).toBe('Dog');
+    });
+
+    it('shows an error with Retry when the request fails, and Retry loads the series', async () => {
+      const { el, stable, click, topic } = await render('/study', null);
+      http()
+        .expectOne((r) => r.url === URL)
+        .flush(null, { status: 500, statusText: 'Boom' });
+      await stable();
+      expect(el.querySelector('.alert-danger')?.textContent).toContain('could not be loaded');
+      expect(el.querySelector('app-flip-card')).toBeNull();
+
+      await click('Retry');
+      http()
+        .expectOne((r) => r.url === URL)
+        .flush(sampleDeck());
+      await stable();
+      expect(topic()).toBe('Dog');
+      expect(el.querySelector('.alert-danger')).toBeNull();
+    });
+
+    it('FR-STD-9: with no series, shows an empty state linking to /cards/new', async () => {
+      const { el, url } = await render('/study', []);
+      expect(el.textContent).toContain('No card series yet');
+      expect(el.querySelector('a[href="/cards/new"]')?.textContent).toContain('Create your first');
+      expect(el.querySelector('app-flip-card')).toBeNull();
+      expect(url()).toBe('/study'); // nothing to point ?series= at
+    });
+
+    it('keyboard shortcuts and Shuffle are harmless with no series', async () => {
+      const { press, el } = await render('/study', []);
+      await press('1');
+      await press('ArrowRight');
+      await press('f');
+      expect(el.textContent).toContain('No card series yet');
+    });
+
+    it('renders a series that has only one card', async () => {
+      const { el, press, pressed } = await render('/study', [
+        makeSeries('solo', 'Solo', [['Only', 'One']]),
+      ]);
+      expect(el.querySelectorAll('app-flip-card').length).toBe(1);
+      await press('2'); // there is no second card
+      expect(pressed()).toEqual(['false']);
+      await press('1');
+      expect(pressed()).toEqual(['true']);
+    });
+
+    it('shows the series image, and hides it if it fails to load', async () => {
+      const { el, stable } = await render();
+      const img = el.querySelector<HTMLImageElement>('img')!;
+      expect(img.getAttribute('src')).toBe('/images/Dog.png');
+
+      img.dispatchEvent(new Event('error'));
+      await stable();
+      expect(el.querySelector('img')).toBeNull();
+    });
+
+    it('shows no image for a series without one', async () => {
+      const { el } = await render('/study', [makeSeries('a', 'Plain', [['f', 'b']])]);
+      expect(el.querySelector('img')).toBeNull();
+    });
   });
 });

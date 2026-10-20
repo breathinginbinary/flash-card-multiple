@@ -376,7 +376,7 @@ Every data-driven page handles four states: **loading** (skeleton or spinner), *
 - `proxy.conf.json` at the repo root, wired in through `angular.json` → `serve.options.proxyConfig`:
 
 ```json
-{ "/api": { "target": "https://localhost:7001", "secure": false, "changeOrigin": true } }
+{ "/api": { "target": "https://localhost:7100", "secure": false, "changeOrigin": true } }
 ```
 
 ---

@@ -8,34 +8,16 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CardService } from '../../core/cards/card-service';
+import { CardSeries } from '../../core/cards/card.models';
 import { FlipCard } from '../../shared/flip-card/flip-card';
 
-// TODO (milestone 5): load the user's series with CardService.listSeriesWithCards().
-const PLACEHOLDER_SERIES = [
-  {
-    id: 'dog-series',
-    topic: 'Dog',
-    imageUrl: '/images/Dog.png',
-    cards: [
-      { position: 0, front: 'German', back: 'Hund' },
-      { position: 1, front: 'Spanish', back: 'perro' },
-    ],
-  },
-  {
-    id: 'cat-series',
-    topic: 'Cat',
-    imageUrl: '/images/Cat.png',
-    cards: [
-      { position: 0, front: 'German', back: 'Katze' },
-      { position: 1, front: 'Spanish', back: 'gato' },
-    ],
-  },
-];
+type LoadState = 'loading' | 'error' | 'loaded';
 
 @Component({
   selector: 'app-study',
-  imports: [FlipCard],
+  imports: [FlipCard, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './study.html',
   host: { '(document:keydown)': 'onKeydown($event)' },
@@ -43,16 +25,23 @@ const PLACEHOLDER_SERIES = [
 export class Study {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly cardService = inject(CardService);
 
   /** Bound from `?series=<id>`; the URL is the source of truth for the current series. */
   readonly series = input<string>();
 
+  protected readonly state = signal<LoadState>('loading');
+
   /** The series in study order; Shuffle reorders it for this session. */
-  protected readonly deck = signal(PLACEHOLDER_SERIES);
-  protected readonly current = computed(
+  protected readonly deck = signal<CardSeries[]>([]);
+  /** The series on screen; `undefined` until loaded, and when the user has none (FR-STD-9). */
+  protected readonly current = computed<CardSeries | undefined>(
     () => this.deck().find((s) => s.id === this.series()) ?? this.deck()[0],
   );
-  protected readonly index = computed(() => this.deck().indexOf(this.current()));
+  protected readonly index = computed(() => {
+    const current = this.current();
+    return current ? this.deck().indexOf(current) : -1;
+  });
   protected readonly hasPrevious = computed(() => this.index() > 0);
   protected readonly hasNext = computed(() => this.index() < this.deck().length - 1);
   protected readonly notice = signal<string | null>(null);
@@ -60,17 +49,34 @@ export class Study {
   /** Resets every card to its front whenever the current series changes (FR-STD-7). */
   protected readonly flipped = linkedSignal({
     source: this.current,
-    computation: (s) => Array<boolean>(s.cards.length).fill(false),
+    computation: (s) => Array<boolean>(s?.cards.length ?? 0).fill(false),
   });
 
+  /** Set when the series image fails to load, so no broken-image icon shows; clears on series change. */
+  protected readonly imageFailed = linkedSignal({ source: this.current, computation: () => false });
+
   constructor() {
+    this.load();
+
     // Keep `?series=` pointing at the series on screen (FR-STD-8, FR-STD-10).
     effect(() => {
+      const current = this.current();
+      if (!current) return;
       const requested = this.series();
-      const id = this.current().id;
-      if (requested === id) return;
+      if (requested === current.id) return;
       if (requested) this.notice.set('That series was not found, so the first series is shown.');
-      this.navigateTo(id);
+      this.navigateTo(current.id);
+    });
+  }
+
+  protected load(): void {
+    this.state.set('loading');
+    this.cardService.listSeriesWithCards().subscribe({
+      next: (list) => {
+        this.deck.set(list);
+        this.state.set('loaded');
+      },
+      error: () => this.state.set('error'),
     });
   }
 
@@ -87,14 +93,15 @@ export class Study {
   }
 
   protected flipAll(): void {
-    this.flipped.set(Array<boolean>(this.current().cards.length).fill(true));
+    this.flipped.update((f) => f.map(() => true));
   }
 
   protected reset(): void {
-    this.flipped.set(Array<boolean>(this.current().cards.length).fill(false));
+    this.flipped.update((f) => f.map(() => false));
   }
 
   protected shuffle(): void {
+    if (this.deck().length === 0) return;
     const deck = [...this.deck()];
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -107,13 +114,15 @@ export class Study {
 
   /** Keyboard shortcuts (FR-STD-6), ignored while typing or with modifier keys held. */
   protected onKeydown(event: KeyboardEvent): void {
-    if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+    const current = this.current();
+    if (!current || event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey)
+      return;
     const target = event.target as HTMLElement | null;
     if (target?.closest('input, textarea, select, [contenteditable]:not([contenteditable=false])'))
       return;
 
     const card = ['1', '2', '3'].indexOf(event.key);
-    if (card !== -1 && card < this.current().cards.length) {
+    if (card !== -1 && card < current.cards.length) {
       this.setFlipped(card, !this.flipped()[card]);
     } else if (event.key === 'ArrowLeft') {
       this.previous();

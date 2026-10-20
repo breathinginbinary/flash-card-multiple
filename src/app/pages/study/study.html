@@ -2,60 +2,94 @@
   <div class="alert alert-warning" role="status">{{ notice() }}</div>
 }
 
-<h1 class="text-center mb-1">{{ current().topic }}</h1>
-<p class="text-center text-body-secondary mb-2" aria-live="polite">
-  Series {{ index() + 1 }} of {{ deck().length }}
-</p>
-
-@if (current().imageUrl) {
-  <div class="text-center mb-4">
-    <img
-      [src]="current().imageUrl"
-      [alt]="current().topic"
-      class="img-fluid rounded"
-      style="max-height: 200px"
-    />
-  </div>
-} @else {
-  <div class="mb-4"></div>
-}
-
-<div class="study-cards row row-cols-1 row-cols-md-{{ current().cards.length }} g-5 mx-auto">
-  @for (card of current().cards; track card.position; let i = $index) {
-    <div class="col">
-      <app-flip-card
-        [front]="card.front"
-        [back]="card.back"
-        [index]="i"
-        [total]="current().cards.length"
-        [flipped]="flipped()[i]"
-        (flippedChange)="setFlipped(i, $event)"
-      />
+@switch (state()) {
+  @case ('loading') {
+    <div class="text-center py-5" role="status">
+      <span class="spinner-border text-primary" aria-hidden="true"></span>
+      <span class="visually-hidden">Loading your card series…</span>
     </div>
   }
-</div>
+  @case ('error') {
+    <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
+      <span>Your card series could not be loaded.</span>
+      <button type="button" class="btn btn-sm btn-outline-danger" (click)="load()">Retry</button>
+    </div>
+  }
+  @case ('loaded') {
+    @if (current(); as c) {
+      <h1 class="text-center mb-1">{{ c.topic }}</h1>
+      <p class="text-center text-body-secondary mb-2" aria-live="polite">
+        Series {{ index() + 1 }} of {{ deck().length }}
+      </p>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
-  <button
-    type="button"
-    class="btn btn-outline-primary"
-    [disabled]="!hasPrevious()"
-    (click)="previous()"
-  >
-    ← Previous
-  </button>
-  <div class="d-flex flex-wrap justify-content-center gap-2">
-    <button type="button" class="btn btn-outline-secondary" (click)="flipAll()">Flip all</button>
-    <button type="button" class="btn btn-outline-secondary" (click)="reset()">Reset</button>
-    <button type="button" class="btn btn-outline-secondary" (click)="shuffle()">Shuffle</button>
-  </div>
-  <button type="button" class="btn btn-outline-primary" [disabled]="!hasNext()" (click)="next()">
-    Next →
-  </button>
-</div>
+      @if (c.imageUrl && !imageFailed()) {
+        <div class="text-center mb-4">
+          <img
+            [src]="c.imageUrl"
+            [alt]="c.topic"
+            class="img-fluid rounded"
+            style="max-height: 200px"
+            (error)="imageFailed.set(true)"
+          />
+        </div>
+      } @else {
+        <div class="mb-4"></div>
+      }
 
-<p class="text-center text-body-secondary small mt-3 mb-0">
-  Shortcuts: <kbd class="mx-1">1</kbd><kbd class="me-1">2</kbd><kbd class="me-2">3</kbd> flip a card
-  · <kbd class="mx-1">←</kbd><kbd class="me-2">→</kbd> previous / next ·
-  <kbd class="mx-1">F</kbd> flip all · <kbd class="mx-1">R</kbd> reset
-</p>
+      <div class="study-cards row row-cols-1 row-cols-md-{{ c.cards.length }} g-5 mx-auto">
+        @for (card of c.cards; track card.position; let i = $index) {
+          <div class="col">
+            <app-flip-card
+              [front]="card.front"
+              [back]="card.back"
+              [index]="i"
+              [total]="c.cards.length"
+              [flipped]="flipped()[i]"
+              (flippedChange)="setFlipped(i, $event)"
+            />
+          </div>
+        }
+      </div>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          [disabled]="!hasPrevious()"
+          (click)="previous()"
+        >
+          ← Previous
+        </button>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+          <button type="button" class="btn btn-outline-secondary" (click)="flipAll()">
+            Flip all
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="reset()">Reset</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="shuffle()">
+            Shuffle
+          </button>
+        </div>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          [disabled]="!hasNext()"
+          (click)="next()"
+        >
+          Next →
+        </button>
+      </div>
+
+      <p class="text-center text-body-secondary small mt-3 mb-0">
+        Shortcuts: <kbd class="mx-1">1</kbd><kbd class="me-1">2</kbd><kbd class="me-2">3</kbd> flip
+        a card · <kbd class="mx-1">←</kbd><kbd class="me-2">→</kbd> previous / next ·
+        <kbd class="mx-1">F</kbd> flip all · <kbd class="mx-1">R</kbd> reset
+      </p>
+    } @else {
+      <!-- FR-STD-9 -->
+      <div class="text-center py-5">
+        <h1 class="h3 mb-3">No card series yet</h1>
+        <a routerLink="/cards/new" class="btn btn-primary">Create your first series</a>
+      </div>
+    }
+  }
+}

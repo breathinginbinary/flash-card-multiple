@@ -1,17 +1,21 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth-guard';
+import { guestGuard } from './core/auth/guest-guard';
 
-// TODO (milestone 2/4): add authGuard, guestGuard and unsavedChangesGuard per SPEC §5.3.
+// TODO (milestone 4): add unsavedChangesGuard to cards/new and cards/:id/edit per SPEC §5.3.
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'study' },
 
   {
     path: 'login',
     title: 'Log in',
+    canActivate: [guestGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
     path: 'register',
     title: 'Register',
+    canActivate: [guestGuard],
     loadComponent: () => import('./pages/register/register').then((m) => m.Register),
   },
   {
@@ -23,11 +27,13 @@ export const routes: Routes = [
   {
     path: 'study',
     title: 'Study',
+    canActivate: [authGuard],
     loadComponent: () => import('./pages/study/study').then((m) => m.Study),
   },
 
   {
     path: 'cards',
+    canActivate: [authGuard],
     children: [
       {
         path: '',

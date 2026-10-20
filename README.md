@@ -1,5 +1,16 @@
 # FlashCardMultiple
 
+FlashCardMultiple is an application for building flash cards that hold **multiple cards under a single topic**. Instead of one question and one answer, each topic carries up to three related cards that you study together. That makes it useful for:
+
+- learning several languages at the same time (one topic, one card per language);
+- studying multiple terms for the same concept;
+- multiple-choice style items, where one prompt has several possible responses;
+- anything where several associated combinations are easier to learn side by side.
+
+> **Status:** this project is under active development and is not a finished product. Features and behaviour may change.
+
+This is the Angular front end. It talks to the companion ASP.NET Core API in `flash-cards-multiple-api`, whose `USER-GUIDE.md` explains how to use the UI.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.8.
 
 ## Development server

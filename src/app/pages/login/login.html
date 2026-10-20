@@ -1,30 +1,65 @@
 <div class="col-12 col-md-9 col-lg-6 mx-auto">
   <h1 class="mb-3">Log in</h1>
-  <form [formGroup]="form" (ngSubmit)="submit()">
+
+  @if (registered()) {
+    <div class="alert alert-success" role="status">Account created. Please log in.</div>
+  }
+  @if (expired()) {
+    <div class="alert alert-info" role="status">Your session expired, please log in again.</div>
+  }
+  @if (errorMessage(); as message) {
+    <div class="alert alert-danger" role="alert">{{ message }}</div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="mb-3">
       <label for="login-email" class="form-label">Login email</label>
       <input
         id="login-email"
         type="email"
         class="form-control"
+        [class.is-invalid]="emailError()"
         formControlName="email"
         placeholder="Enter Email"
         autocomplete="email"
+        [attr.aria-invalid]="emailError() ? 'true' : null"
+        aria-describedby="login-email-error"
       />
+      <div id="login-email-error" class="invalid-feedback d-block" aria-live="polite">
+        {{ emailError() }}
+      </div>
     </div>
     <div class="mb-3">
       <label for="login-password" class="form-label">Password</label>
-      <input
-        id="login-password"
-        type="password"
-        class="form-control"
-        formControlName="password"
-        placeholder="Enter Password"
-        autocomplete="current-password"
-      />
+      <div class="input-group">
+        <input
+          id="login-password"
+          [type]="showPassword() ? 'text' : 'password'"
+          class="form-control"
+          formControlName="password"
+          placeholder="Enter Password"
+          autocomplete="current-password"
+        />
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [attr.aria-pressed]="showPassword()"
+          aria-controls="login-password"
+          (click)="showPassword.set(!showPassword())"
+        >
+          {{ showPassword() ? 'Hide' : 'Show' }}
+          <span class="visually-hidden">password</span>
+        </button>
+      </div>
     </div>
-    <div class="d-flex justify-content-end">
-      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Log in</button>
+    <div class="d-flex justify-content-between align-items-center">
+      <span>Need an account? <a routerLink="/register">Register</a></span>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid || busy()">
+        @if (busy()) {
+          <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        }
+        Log in
+      </button>
     </div>
   </form>
 </div>
