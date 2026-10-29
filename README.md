@@ -7,7 +7,7 @@ FlashCardMultiple is an application for building flash cards that hold **multipl
 - multiple-choice style items, where one prompt has several possible responses;
 - anything where several associated combinations are easier to learn side by side.
 
-> **Status:** this project is under active development and is not a finished product. Features and behaviour may change.
+> **Status:** This project is under active development and is not a finished product. Features and behavior may change. See the SPEC.md file to view the specs this application was designed from.
 
 This is the Angular front end. It talks to the companion ASP.NET Core API in `flash-cards-multiple-api`, whose `USER-GUIDE.md` explains how to use the UI.
 
