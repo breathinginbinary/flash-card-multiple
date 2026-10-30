@@ -78,6 +78,37 @@ $utilities: map-merge(
   }
 }
 
+// Native <dialog> styled as a Bootstrap modal (SPEC §8.3). The .modal-* parts read their
+// variables from a .modal wrapper, which a <dialog> doesn't have, so define them here.
+dialog.app-dialog {
+  --bs-modal-width: 28rem;
+  --bs-modal-padding: #{$modal-inner-padding};
+  --bs-modal-color: var(--bs-body-color);
+  --bs-modal-bg: var(--bs-body-bg);
+  --bs-modal-border-color: var(--bs-border-color-translucent);
+  --bs-modal-border-width: #{$modal-content-border-width};
+  --bs-modal-border-radius: var(--bs-border-radius-lg);
+  --bs-modal-box-shadow: var(--bs-box-shadow);
+  --bs-modal-inner-border-radius: calc(var(--bs-border-radius-lg) - #{$modal-content-border-width});
+  --bs-modal-footer-gap: #{$modal-footer-margin-between};
+  --bs-modal-footer-border-color: var(--bs-border-color);
+  --bs-modal-footer-border-width: #{$modal-footer-border-width};
+
+  width: min(var(--bs-modal-width), calc(100% - 2rem));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bs-modal-color);
+
+  .modal-content {
+    box-shadow: var(--bs-modal-box-shadow);
+  }
+
+  &::backdrop {
+    background-color: rgba($modal-backdrop-bg, $modal-backdrop-opacity);
+  }
+}
+
 // Subtler placeholders: lighter on the light theme, darker on the dark theme.
 .form-control::placeholder {
   color: #b5bcc4;

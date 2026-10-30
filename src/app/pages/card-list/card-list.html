@@ -86,7 +86,7 @@
   }
 </div>
 
-<dialog #deleteDialog class="border-0 rounded-3 shadow p-0" (cancel)="cancelDelete()">
+<dialog #deleteDialog class="app-dialog" (cancel)="cancelDelete()">
   <div class="modal-content">
     <div class="modal-body">Delete “{{ pendingDelete()?.topic }}”? This cannot be undone.</div>
     <div class="modal-footer">
