@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <dialog class="border-0 rounded-3 shadow p-0">
+    <dialog class="app-dialog">
       <div class="modal-content">
         <div class="modal-body">Confirm dialog placeholder.</div>
         <div class="modal-footer">
